@@ -2,10 +2,19 @@ import React, { useState, useRef } from "react";
 import { useDrop } from "react-dnd";
 import { FaLock } from "react-icons/fa";
 
-function Canvas() {
+function Canvas({ onElementsChange }) {
     const [elements, setElements] = useState([]);
     const [contextMenu, setContextMenu] = useState(null);
     const selectedElementId = useRef(null);
+    const wasDraggedRef = useRef(false); // 👈 new flag to detect drag
+
+    const updateElements = (updater) => {
+        setElements((prev) => {
+            const newElements = typeof updater === "function" ? updater(prev) : updater;
+            if (onElementsChange) onElementsChange(newElements);
+            return newElements;
+        });
+    };
 
     const [, drop] = useDrop(() => ({
         accept: "element",
@@ -13,15 +22,24 @@ function Canvas() {
             const offset = monitor.getClientOffset();
             const canvas = document.getElementById("canvas-area");
             const canvasRect = canvas.getBoundingClientRect();
-            const x = offset.x - canvasRect.left;
-            const y = offset.y - canvasRect.top;
-            setElements((prev) => [
+            const canvasWidth = canvasRect.width;
+            const canvasHeight = canvasRect.height;
+
+            let x = offset.x - canvasRect.left;
+            let y = offset.y - canvasRect.top;
+
+            const elementWidth = 100;
+            const elementHeight = 50;
+            x = Math.max(0, Math.min(x, canvasWidth - elementWidth));
+            y = Math.max(0, Math.min(y, canvasHeight - elementHeight));
+
+            updateElements((prev) => [
                 ...prev,
                 {
                     id: Date.now(),
                     type: item.type,
-                    left: x - 50,
-                    top: y - 25,
+                    left: x,
+                    top: y,
                     locked: false,
                     content: "",
                     file: null,
@@ -42,14 +60,11 @@ function Canvas() {
         selectedElementId.current = id;
     };
 
-
     const handleLockUnlock = () => {
         const id = selectedElementId.current;
-        setElements((prev) =>
+        updateElements((prev) =>
             prev.map((el) =>
-                el.id === id
-                    ? { ...el, locked: !el.locked }
-                    : el
+                el.id === id ? { ...el, locked: !el.locked } : el
             )
         );
         setContextMenu(null);
@@ -57,46 +72,68 @@ function Canvas() {
 
     const handleDelete = () => {
         const id = selectedElementId.current;
-        setElements((prev) => prev.filter((el) => el.id !== id));
+        updateElements((prev) => prev.filter((el) => el.id !== id));
         setContextMenu(null);
     };
 
     const handleFileUpload = (e, id) => {
         const file = e.target.files[0];
         const fileUrl = file ? URL.createObjectURL(file) : null;
-        setElements((prev) =>
+        updateElements((prev) =>
             prev.map((el) => (el.id === id ? { ...el, file: fileUrl } : el))
         );
     };
 
-    // Add drag functionality for rearranging
     const handleDragStart = (e, id) => {
         const element = elements.find((el) => el.id === id);
-        if (!element.locked) {
-            const { clientX: startX, clientY: startY } = e;
-            const offsetX = e.clientX - element.left;
-            const offsetY = e.clientY - element.top;
+        if (!element || element.locked) return;
 
-            const handleMouseMove = (moveEvent) => {
-                const dx = moveEvent.clientX - startX;
-                const dy = moveEvent.clientY - startY;
-                setElements((prev) =>
-                    prev.map((el) =>
-                        el.id === id
-                            ? { ...el, left: moveEvent.clientX - offsetX, top: moveEvent.clientY - offsetY }
-                            : el
-                    )
-                );
-            };
+        wasDraggedRef.current = false;
+        const offsetX = e.clientX - element.left;
+        const offsetY = e.clientY - element.top;
 
-            const handleMouseUp = () => {
-                document.removeEventListener("mousemove", handleMouseMove);
-                document.removeEventListener("mouseup", handleMouseUp);
-            };
+        const handleMouseMove = (moveEvent) => {
+            wasDraggedRef.current = true;
 
-            document.addEventListener("mousemove", handleMouseMove);
-            document.addEventListener("mouseup", handleMouseUp);
+            const canvas = document.getElementById("canvas-area");
+            const canvasRect = canvas.getBoundingClientRect();
+            const canvasWidth = canvasRect.width;
+            const canvasHeight = canvasRect.height;
+
+            let newLeft = moveEvent.clientX - offsetX;
+            let newTop = moveEvent.clientY - offsetY;
+
+            const elementWidth = 100;
+            const elementHeight = 50;
+            newLeft = Math.max(0, Math.min(newLeft, canvasWidth - elementWidth));
+            newTop = Math.max(0, Math.min(newTop, canvasHeight - elementHeight));
+
+            updateElements((prev) =>
+                prev.map((el) =>
+                    el.id === id ? { ...el, left: newLeft, top: newTop } : el
+                )
+            );
+        };
+
+        const handleMouseUp = () => {
+            document.removeEventListener("mousemove", handleMouseMove);
+            document.removeEventListener("mouseup", handleMouseUp);
+        };
+
+        document.addEventListener("mousemove", handleMouseMove);
+        document.addEventListener("mouseup", handleMouseUp);
+    };
+
+    const handleClick = (e) => {
+        if (wasDraggedRef.current) {
+            e.preventDefault();
+            e.stopPropagation();
+            wasDraggedRef.current = false;
+            return;
         }
+
+        console.log("Click: not dragged");
+        // TODO: future logic for selecting an element
     };
 
     return (
@@ -105,12 +142,12 @@ function Canvas() {
             id="canvas-area"
             className="relative w-full h-full bg-[linear-gradient(#e5e7eb_1px,transparent_1px),linear-gradient(90deg,#e5e7eb_1px,transparent_1px)] bg-[size:20px_20px] overflow-hidden"
         >
-            {/* Draggable Elements */}
             {elements.map((el) => (
                 <div
                     key={el.id}
                     onContextMenu={(e) => handleContextMenu(e, el.id)}
                     onMouseDown={(e) => handleDragStart(e, el.id)}
+                    onClick={handleClick}
                     style={{ left: el.left, top: el.top }}
                     className="absolute border p-2 bg-gray-100 cursor-move hover:ring-2 hover:ring-indigo-400 transition-all"
                 >
@@ -126,7 +163,11 @@ function Canvas() {
                     {el.type === "Image" && (
                         <>
                             {el.file ? (
-                                <img src={el.file} alt="Uploaded" className="max-w-[200px]" />
+                                <img
+                                    src={el.file}
+                                    alt="Uploaded"
+                                    className="max-w-[200px]"
+                                />
                             ) : (
                                 !el.locked && (
                                     <input
@@ -173,7 +214,6 @@ function Canvas() {
                 </div>
             ))}
 
-            {/* Right-click Context Menu */}
             {contextMenu && (
                 <ul
                     className="absolute bg-white border rounded shadow-md text-sm z-50"

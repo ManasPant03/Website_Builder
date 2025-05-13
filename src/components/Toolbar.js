@@ -10,22 +10,10 @@ function Toolbar({ clearCanvas }) {
                 Save Design
             </button>
             <button
-                onClick={() => alert("Load Design clicked")}
-                className="bg-blue-500 text-white py-2 px-4 rounded-md"
+                onClick={() => console.log("View Saved Design clicked")}
+                className="bg-purple-500 text-white py-2 px-4 rounded-md"
             >
-                Load Design
-            </button>
-            <button
-                onClick={() => alert("Delete Design clicked")}
-                className="bg-yellow-500 text-white py-2 px-4 rounded-md"
-            >
-                Delete Design
-            </button>
-            <button
-                onClick={() => alert("Delete Saved Design clicked")}
-                className="bg-red-500 text-white py-2 px-4 rounded-md"
-            >
-                Delete Saved Design
+                View Saved Design
             </button>
             <button
                 onClick={clearCanvas}
