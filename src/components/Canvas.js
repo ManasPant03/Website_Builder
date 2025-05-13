@@ -13,10 +13,8 @@ function Canvas() {
             const offset = monitor.getClientOffset();
             const canvas = document.getElementById("canvas-area");
             const canvasRect = canvas.getBoundingClientRect();
-
             const x = offset.x - canvasRect.left;
             const y = offset.y - canvasRect.top;
-
             setElements((prev) => [
                 ...prev,
                 {
@@ -32,49 +30,27 @@ function Canvas() {
         },
     }));
 
-    const handleDrag = (e, id) => {
-        e.preventDefault();
-        const startX = e.clientX;
-        const startY = e.clientY;
-
-        const elementIndex = elements.findIndex(el => el.id === id);
-        if (elements[elementIndex].locked) return;
-
-        const handleMouseMove = (moveEvent) => {
-            const dx = moveEvent.clientX - startX;
-            const dy = moveEvent.clientY - startY;
-
-            setElements((prev) =>
-                prev.map((el) =>
-                    el.id === id
-                        ? { ...el, left: el.left + dx, top: el.top + dy }
-                        : el
-                )
-            );
-
-            document.removeEventListener("mousemove", handleMouseMove);
-        };
-
-        document.addEventListener("mousemove", handleMouseMove);
-        document.addEventListener("mouseup", () => {
-            document.removeEventListener("mousemove", handleMouseMove);
-        }, { once: true });
-    };
-
     const handleContextMenu = (e, id) => {
         e.preventDefault();
+        const canvas = document.getElementById("canvas-area");
+        const canvasRect = canvas.getBoundingClientRect();
         setContextMenu({
             id,
-            x: e.clientX,
-            y: e.clientY,
+            x: e.clientX - canvasRect.left,
+            y: e.clientY - canvasRect.top,
         });
         selectedElementId.current = id;
     };
 
-    const handleLock = () => {
+
+    const handleLockUnlock = () => {
         const id = selectedElementId.current;
         setElements((prev) =>
-            prev.map((el) => (el.id === id ? { ...el, locked: true } : el))
+            prev.map((el) =>
+                el.id === id
+                    ? { ...el, locked: !el.locked }
+                    : el
+            )
         );
         setContextMenu(null);
     };
@@ -89,25 +65,54 @@ function Canvas() {
         const file = e.target.files[0];
         const fileUrl = file ? URL.createObjectURL(file) : null;
         setElements((prev) =>
-            prev.map((el) =>
-                el.id === id ? { ...el, file: fileUrl } : el
-            )
+            prev.map((el) => (el.id === id ? { ...el, file: fileUrl } : el))
         );
+    };
+
+    // Add drag functionality for rearranging
+    const handleDragStart = (e, id) => {
+        const element = elements.find((el) => el.id === id);
+        if (!element.locked) {
+            const { clientX: startX, clientY: startY } = e;
+            const offsetX = e.clientX - element.left;
+            const offsetY = e.clientY - element.top;
+
+            const handleMouseMove = (moveEvent) => {
+                const dx = moveEvent.clientX - startX;
+                const dy = moveEvent.clientY - startY;
+                setElements((prev) =>
+                    prev.map((el) =>
+                        el.id === id
+                            ? { ...el, left: moveEvent.clientX - offsetX, top: moveEvent.clientY - offsetY }
+                            : el
+                    )
+                );
+            };
+
+            const handleMouseUp = () => {
+                document.removeEventListener("mousemove", handleMouseMove);
+                document.removeEventListener("mouseup", handleMouseUp);
+            };
+
+            document.addEventListener("mousemove", handleMouseMove);
+            document.addEventListener("mouseup", handleMouseUp);
+        }
     };
 
     return (
         <div
             ref={drop}
             id="canvas-area"
-            className="relative w-full h-full border border-gray-400 bg-gray-50 overflow-hidden"
+            className="relative w-full h-full bg-[linear-gradient(#e5e7eb_1px,transparent_1px),linear-gradient(90deg,#e5e7eb_1px,transparent_1px)] bg-[size:20px_20px] overflow-hidden"
         >
+            {/* Draggable Elements */}
             {elements.map((el) => (
                 <div
                     key={el.id}
-                    onMouseDown={(e) => handleDrag(e, el.id)}
                     onContextMenu={(e) => handleContextMenu(e, el.id)}
+                    onMouseDown={(e) => handleDragStart(e, el.id)}
                     style={{ left: el.left, top: el.top }}
-                    className="absolute border p-2 bg-gray-100 cursor-move"
+                    className="absolute border p-2 bg-gray-100 cursor-move hover:ring-2 hover:ring-indigo-400 transition-all"
                 >
                     {el.type === "Text" && (
                         <p
@@ -168,6 +173,7 @@ function Canvas() {
                 </div>
             ))}
 
+            {/* Right-click Context Menu */}
             {contextMenu && (
                 <ul
                     className="absolute bg-white border rounded shadow-md text-sm z-50"
@@ -175,9 +181,11 @@ function Canvas() {
                 >
                     <li
                         className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                        onClick={handleLock}
+                        onClick={handleLockUnlock}
                     >
-                        Lock
+                        {elements.find((el) => el.id === selectedElementId.current)?.locked
+                            ? "Unlock"
+                            : "Lock"}
                     </li>
                     <li
                         className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
