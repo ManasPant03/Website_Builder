@@ -15,12 +15,18 @@ const ElementButton = ({ type }) => {
 };
 
 function Sidebar() {
-    const [visible, setVisible] = useState(true);
+    const [visible] = useState(true);
 
     return (
-        <div className="h-full">
+        <div className="h-full p-2">
+            {/* Heading */}
+            <div className="bg-gray-100 p-4 rounded shadow mt-2">
+                <h2 className="text-lg font-semibold mb-2">Drag-n-Drop</h2>
+            </div>
+
+            {/* Element Buttons */}
             {visible && (
-                <div className="space-y-2 mt-2">
+                <div className="space-y-2 mt-4">
                     {["Text", "Image", "Button", "Video", "Container"].map((type) => (
                         <ElementButton key={type} type={type} />
                     ))}

@@ -18,8 +18,15 @@ function App() {
   };
 
   const generateCodeFromElements = (elements) => {
+    const scale = 100 / 90;
+
     const bodyElements = elements.map((el) => {
-      const style = `position: absolute; left: ${el.left}px; top: ${el.top}px;`;
+      const scaledLeft = Math.round(el.left * scale);
+      const scaledTop = Math.round(el.top * scale);
+
+      // Positioning relative to canvas's offset from screen (5vw, 5vh)
+      const style = `position: absolute; left: calc(5vw + ${scaledLeft}px); top: calc(5vh + ${scaledTop}px);`;
+
       switch (el.type) {
         case "Text":
           return `<p style="${style}">${el.content || "Editable Text"}</p>`;
@@ -65,48 +72,74 @@ ${bodyElements}
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="relative w-screen h-screen overflow-hidden bg-gradient-to-tr from-indigo-100 via-white to-cyan-100 text-gray-800">
-        <h1 className="text-3xl font-bold text-center text-indigo-700 py-2 z-10 relative">
-          No-Code Website Builder
-        </h1>
+      <div className="relative flex flex-col h-screen w-screen bg-gradient-to-tr from-indigo-100 via-white to-cyan-100 text-gray-800">
 
-        {/* Toggle Buttons */}
-        <button
-          onClick={() => setShowSidebar(!showSidebar)}
-          className="absolute top-2 left-2 bg-white/70 hover:bg-white text-gray-800 px-3 py-1 rounded shadow z-20"
-        >
-          {showSidebar ? "Hide" : "Show"} Sidebar
-        </button>
-        <button
-          onClick={() => setShowCodePanel(!showCodePanel)}
-          className="absolute top-2 right-2 bg-white/70 hover:bg-white text-gray-800 px-3 py-1 rounded shadow z-20"
-        >
-          {showCodePanel ? "Hide" : "Show"} Code
-        </button>
-
-        {/* Fullscreen Canvas */}
-        <div className="absolute top-[60px] bottom-[80px] left-0 right-0 z-0">
-          <Canvas key={canvasKey} onElementsChange={generateCodeFromElements} />
+        {/* Header - Top 10% */}
+        <div className="h-[10%] flex items-center justify-center px-4 relative z-10">
+          <h1 className="text-2xl font-bold text-indigo-700 text-center">
+            No-Code Website Builder
+          </h1>
         </div>
 
-        {/* Sidebar Overlay */}
+        {/* Canvas Row - Middle 80% */}
+        <div className="relative h-[80%] flex justify-center items-center">
+          <div className="w-[80%] h-full z-10">
+            <Canvas key={canvasKey} onElementsChange={generateCodeFromElements} />
+          </div>
+        </div>
+
+        {/* Toolbar - Bottom 10% */}
+        <div className="h-[10%]">
+          <Toolbar clearCanvas={handleClearCanvas} />
+        </div>
+
+        {/* Sidebar Toggle */}
+        {showSidebar ? (
+          <button
+            onClick={() => setShowSidebar(false)}
+            className="fixed top-1/2 left-[250px] transform -translate-y-1/2 bg-indigo-500 hover:bg-indigo-600 text-white px-2 py-1 rounded-l shadow z-30"
+          >
+            ←
+          </button>
+        ) : (
+          <button
+            onClick={() => setShowSidebar(true)}
+            className="fixed top-1/2 left-2 transform -translate-y-1/2 bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded shadow z-30"
+          >
+            → Elements
+          </button>
+        )}
+
+        {/* Code Panel Toggle */}
+        {showCodePanel ? (
+          <button
+            onClick={() => setShowCodePanel(false)}
+            className="fixed top-1/2 right-[300px] transform -translate-y-1/2 bg-indigo-500 hover:bg-indigo-600 text-white px-2 py-1 rounded-r shadow z-30"
+          >
+            →
+          </button>
+        ) : (
+          <button
+            onClick={() => setShowCodePanel(true)}
+            className="fixed top-1/2 right-2 transform -translate-y-1/2 bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded shadow z-30"
+          >
+            Code ←
+          </button>
+        )}
+
+        {/* Sidebar Panel */}
         {showSidebar && (
-          <div className="absolute top-[60px] bottom-[80px] left-0 w-[250px] bg-white border-r z-20 overflow-auto shadow-md">
+          <div className="fixed top-0 bottom-0 left-0 w-[250px] bg-white z-20 shadow-md border-r-[1.5px] border-gray-400 shadow-inner overflow-hidden">
             <Sidebar />
           </div>
         )}
 
-        {/* Code Panel Overlay */}
+        {/* Code Panel */}
         {showCodePanel && (
-          <div className="absolute top-[60px] bottom-[80px] right-0 w-[300px] bg-white border-l z-20 overflow-auto shadow-md">
+          <div className="fixed top-0 bottom-0 right-0 w-[300px] bg-white z-20 shadow-md border-l-[1.5px] border-gray-400 shadow-inner overflow-hidden">
             <CodePanel code={generatedCode} />
           </div>
         )}
-
-        {/* Toolbar Fixed at Bottom */}
-        <div className="absolute bottom-0 left-0 right-0 z-10 bg-white">
-          <Toolbar clearCanvas={handleClearCanvas} />
-        </div>
       </div>
     </DndProvider>
   );

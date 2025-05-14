@@ -6,7 +6,7 @@ function Canvas({ onElementsChange }) {
     const [elements, setElements] = useState([]);
     const [contextMenu, setContextMenu] = useState(null);
     const selectedElementId = useRef(null);
-    const wasDraggedRef = useRef(false); // 👈 new flag to detect drag
+    const wasDraggedRef = useRef(false);
 
     const updateElements = (updater) => {
         setElements((prev) => {
@@ -63,9 +63,7 @@ function Canvas({ onElementsChange }) {
     const handleLockUnlock = () => {
         const id = selectedElementId.current;
         updateElements((prev) =>
-            prev.map((el) =>
-                el.id === id ? { ...el, locked: !el.locked } : el
-            )
+            prev.map((el) => (el.id === id ? { ...el, locked: !el.locked } : el))
         );
         setContextMenu(null);
     };
@@ -131,16 +129,13 @@ function Canvas({ onElementsChange }) {
             wasDraggedRef.current = false;
             return;
         }
-
-        console.log("Click: not dragged");
-        // TODO: future logic for selecting an element
     };
 
     return (
         <div
             ref={drop}
             id="canvas-area"
-            className="relative w-full h-full bg-[linear-gradient(#e5e7eb_1px,transparent_1px),linear-gradient(90deg,#e5e7eb_1px,transparent_1px)] bg-[size:20px_20px] overflow-hidden"
+            className="relative w-[90%] h-[90%] mx-auto my-4 box-border rounded-md border-[1.5px] border-gray-400 bg-[linear-gradient(#d1d5db_1px,transparent_1px),linear-gradient(90deg,#d1d5db_1px,transparent_1px)] bg-[size:20px_20px] overflow-hidden shadow-sm"
         >
             {elements.map((el) => (
                 <div
@@ -149,7 +144,7 @@ function Canvas({ onElementsChange }) {
                     onMouseDown={(e) => handleDragStart(e, el.id)}
                     onClick={handleClick}
                     style={{ left: el.left, top: el.top }}
-                    className="absolute border p-2 bg-gray-100 cursor-move hover:ring-2 hover:ring-indigo-400 transition-all"
+                    className="absolute border p-2 bg-gray-100 cursor-move hover:ring-2 hover:ring-indigo-400 transition-all max-w-full"
                 >
                     {el.type === "Text" && (
                         <p
