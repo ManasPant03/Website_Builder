@@ -11,7 +11,7 @@ function Canvas({ onElementsChange }) {
     const updateElements = (updater) => {
         setElements((prev) => {
             const newElements = typeof updater === "function" ? updater(prev) : updater;
-            if (onElementsChange) onElementsChange(newElements); // trigger code generation
+            if (onElementsChange) onElementsChange(newElements);
             return newElements;
         });
     };
@@ -135,7 +135,7 @@ function Canvas({ onElementsChange }) {
         <div
             ref={drop}
             id="canvas-area"
-            className="relative w-[90%] h-[90%] mx-auto my-4 box-border rounded-md border-[1.5px] border-gray-400 bg-[linear-gradient(#d1d5db_1px,transparent_1px),linear-gradient(90deg,#d1d5db_1px,transparent_1px)] bg-[size:20px_20px] overflow-hidden shadow-sm"
+            className="relative w-[90%] h-[90%] mx-auto my-4 box-border rounded-md border-[1.5px] border-gray-400 dark:border-gray-600 bg-[linear-gradient(#d1d5db_1px,transparent_1px),linear-gradient(90deg,#d1d5db_1px,transparent_1px)] dark:bg-[linear-gradient(#d1d5db_1px,transparent_1px),linear-gradient(90deg,#d1d5db_1px,transparent_1px)] bg-[size:20px_20px] overflow-hidden shadow-sm"
         >
             {elements.map((el) => (
                 <div
@@ -144,7 +144,7 @@ function Canvas({ onElementsChange }) {
                     onMouseDown={(e) => handleDragStart(e, el.id)}
                     onClick={handleClick}
                     style={{ left: el.left, top: el.top }}
-                    className="absolute border p-2 bg-gray-100 cursor-move hover:ring-2 hover:ring-indigo-400 transition-all max-w-full"
+                    className="absolute border p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white cursor-move hover:ring-2 hover:ring-indigo-400 transition-all max-w-full"
                 >
                     {el.type === "Text" && (
                         <p
@@ -165,6 +165,7 @@ function Canvas({ onElementsChange }) {
                                         type="file"
                                         accept="image/*"
                                         onChange={(e) => handleFileUpload(e, el.id)}
+                                        className="text-sm text-white dark:text-white"
                                     />
                                 )
                             )}
@@ -182,6 +183,7 @@ function Canvas({ onElementsChange }) {
                                         type="file"
                                         accept="video/*"
                                         onChange={(e) => handleFileUpload(e, el.id)}
+                                        className="text-sm text-white dark:text-white"
                                     />
                                 )
                             )}
@@ -193,12 +195,12 @@ function Canvas({ onElementsChange }) {
                         </button>
                     )}
                     {el.type === "Container" && (
-                        <div className="bg-gray-200 p-4">
+                        <div className="bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white p-4">
                             {el.content || "Container"}
                         </div>
                     )}
                     {el.locked && (
-                        <div className="absolute bottom-0 right-0 p-1 text-gray-500">
+                        <div className="absolute bottom-0 right-0 p-1 text-gray-500 dark:text-gray-300">
                             <FaLock size={12} />
                         </div>
                     )}
@@ -207,11 +209,11 @@ function Canvas({ onElementsChange }) {
 
             {contextMenu && (
                 <ul
-                    className="absolute bg-white border rounded shadow-md text-sm z-50"
+                    className="absolute bg-white dark:bg-gray-800 border rounded shadow-md text-sm z-50 text-gray-800 dark:text-white"
                     style={{ top: contextMenu.y, left: contextMenu.x }}
                 >
                     <li
-                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                        className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
                         onClick={handleLockUnlock}
                     >
                         {elements.find((el) => el.id === selectedElementId.current)?.locked
@@ -219,7 +221,7 @@ function Canvas({ onElementsChange }) {
                             : "Lock"}
                     </li>
                     <li
-                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                        className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
                         onClick={handleDelete}
                     >
                         Delete
