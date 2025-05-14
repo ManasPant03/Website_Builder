@@ -11,7 +11,7 @@ function Canvas({ onElementsChange }) {
     const updateElements = (updater) => {
         setElements((prev) => {
             const newElements = typeof updater === "function" ? updater(prev) : updater;
-            if (onElementsChange) onElementsChange(newElements);
+            if (onElementsChange) onElementsChange(newElements); // trigger code generation
             return newElements;
         });
     };
@@ -158,11 +158,7 @@ function Canvas({ onElementsChange }) {
                     {el.type === "Image" && (
                         <>
                             {el.file ? (
-                                <img
-                                    src={el.file}
-                                    alt="Uploaded"
-                                    className="max-w-[200px]"
-                                />
+                                <img src={el.file} alt="Uploaded" className="max-w-[200px]" />
                             ) : (
                                 !el.locked && (
                                     <input

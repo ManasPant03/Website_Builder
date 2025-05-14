@@ -18,18 +18,17 @@ function App() {
   };
 
   const generateCodeFromElements = (elements) => {
-    const scale = 100 / 90;
+    const scale = 100 / 72; // because canvas functional area is 72% of screen
 
     const bodyElements = elements.map((el) => {
       const scaledLeft = Math.round(el.left * scale);
       const scaledTop = Math.round(el.top * scale);
 
-      // Positioning relative to canvas's offset from screen (5vw, 5vh)
-      const style = `position: absolute; left: calc(5vw + ${scaledLeft}px); top: calc(5vh + ${scaledTop}px);`;
+      const style = `position: absolute; left: ${scaledLeft}px; top: ${scaledTop}px;`;
 
       switch (el.type) {
         case "Text":
-          return `<p style="${style}">${el.content || "Editable Text"}</p>`;
+          return `<p style="${style} font-size: 16px; font-family: sans-serif;">${el.content || "Editable Text"}</p>`;
         case "Image":
           return `<div style="${style} max-width: 200px; border: 1px dashed gray; padding: 10px;">[Image Placeholder]</div>`;
         case "Video":
@@ -47,18 +46,18 @@ function App() {
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Generated Page</title>
   <style>
     body {
       margin: 0;
       padding: 0;
       font-family: sans-serif;
-      position: relative;
       width: 100vw;
       height: 100vh;
-      overflow: hidden;
+      position: relative;
       background: white;
+      overflow: hidden;
     }
   </style>
 </head>
@@ -73,7 +72,6 @@ ${bodyElements}
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="relative flex flex-col h-screen w-screen bg-gradient-to-tr from-indigo-100 via-white to-cyan-100 text-gray-800">
-
         {/* Header - Top 10% */}
         <div className="h-[10%] flex items-center justify-center px-4 relative z-10">
           <h1 className="text-2xl font-bold text-indigo-700 text-center">
