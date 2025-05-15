@@ -77,7 +77,7 @@ ${bodyElements}
           {/* Header - Top 10% */}
           <div className="h-[10%] flex items-center justify-center px-4 relative z-10">
             <h1 className="text-2xl font-bold text-indigo-700 dark:text-white text-center">
-              No-Code Website Builder
+              WebWeaver: A No-Code Website Builder
             </h1>
           </div>
 
